@@ -1,10 +1,17 @@
 import express from "express";
-import { getUserProfile, registerUser } from "../controllers/user.controller";
 import { verifyToken } from "../middlewares/auth.middleware";
+import {
+  getMyProfileData,
+  getUserFriends,
+  getUserProfile,
+  updateMyProfileData,
+} from "../controllers/user.controller";
 
 const router = express.Router();
 
-router.post("/register", registerUser);
+router.get("/me", verifyToken, getMyProfileData);
+router.put("/me", verifyToken, updateMyProfileData);
 router.get("/:username", verifyToken, getUserProfile);
+router.get("/:username/friends", verifyToken, getUserFriends);
 
 export default router;
