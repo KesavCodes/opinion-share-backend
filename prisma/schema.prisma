@@ -25,6 +25,8 @@ model User {
   friendshipsSent     Friendship[] @relation("FriendshipSender")
   friendshipsReceived Friendship[] @relation("FriendshipReceiver")
   QuestionRecipient QuestionRecipient[]
+  Blocker BlockedUser[] @relation("Blocker")
+  BlockedUser BlockedUser[] @relation("BlockedUser")
 }
 
 model Question {
@@ -69,6 +71,15 @@ model Friendship {
   receiver   User     @relation("FriendshipReceiver", fields: [receiverId], references: [id])
   receiverId String   @db.ObjectId
   status     FriendshipStatus
+  createdAt  DateTime @default(now())
+}
+
+model BlockedUser {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  blocker    User     @relation("Blocker", fields: [blockerId], references: [id])
+  blockerId  String   @db.ObjectId
+  blockedUser User     @relation("BlockedUser", fields: [blockedUserId], references: [id])
+  blockedUserId String @db.ObjectId
   createdAt  DateTime @default(now())
 }
 
