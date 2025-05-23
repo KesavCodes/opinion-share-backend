@@ -4,6 +4,7 @@ import cors from "cors";
 
 import authRouter from "./routes/auth.route";
 import userRouter from "./routes/user.route";
+import friendRouter from "./routes/friend.route";
 import questionRouter from "./routes/question.route";
 
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(express.json());
 
 app.use("/auth", authRouter);
 app.use("/user", userRouter);
+app.use("/friend", friendRouter);
 app.use("/question", questionRouter);
 
 app.get("/", (req: Request, res: Response) => {

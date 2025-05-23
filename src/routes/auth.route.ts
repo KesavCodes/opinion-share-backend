@@ -3,7 +3,6 @@ import {
   loginUser,
   registerUser,
 } from "../controllers/auth.controller";
-import { verifyToken } from "../middlewares/auth.middleware";
 
 const router = express.Router();
 

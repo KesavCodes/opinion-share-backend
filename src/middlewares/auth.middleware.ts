@@ -26,7 +26,7 @@ export const verifyToken = async (
     req.userId = userId;
     next();
   } catch (err) {
-    console.log("Error when verifying JWT token", err);
+    console.log("Error when verifying JWT token");
     return res.status(401).json({ message: "Token is invalid!" });
   }
 };
