@@ -39,7 +39,7 @@ model Question {
   isTimed      Boolean           
   endTimeStamp DateTime?         // nullable if not timed
   isPublic     Boolean          
-  publicLink   String?           @unique
+  publicLink   String?
   createdAt    DateTime          @default(now())
   recipients   QuestionRecipient[]
   answers      Answer[]

@@ -40,13 +40,13 @@ export const getUserFriends = async (
               OR: [
                 {
                   username: {
-                    startsWith: search ? String(search) : undefined,
+                    startsWith: search ? String(search) : "",
                     mode: "insensitive",
                   },
                 },
                 {
                   name: {
-                    startsWith: search ? String(search) : undefined,
+                    startsWith: search ? String(search) : "",
                     mode: "insensitive",
                   },
                 },
@@ -61,13 +61,13 @@ export const getUserFriends = async (
               OR: [
                 {
                   username: {
-                    startsWith: search ? String(search) : undefined,
+                    startsWith: search ? String(search) : "",
                     mode: "insensitive",
                   },
                 },
                 {
                   name: {
-                    startsWith: search ? String(search) : undefined,
+                    startsWith: search ? String(search) : "",
                     mode: "insensitive",
                   },
                 },
