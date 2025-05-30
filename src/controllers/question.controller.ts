@@ -2,11 +2,63 @@ import { Request, Response } from "express";
 import prisma from "../lib/clients";
 import { nanoid } from "nanoid";
 
+export const getQuestions = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId } = req;
+    const { page } = req.params;
+
+    const skip = page ? (parseInt(page) - 1) * 5 : 0;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User ID is required." });
+    }
+
+    const questions = await prisma.question.findMany({
+      where: {
+        OR: [
+          { createdById: userId as string },
+          { recipients: { some: { userId: userId as string } } },
+        ],
+      },
+      include: {
+        createdBy: {
+          select: {
+            name: true,
+            username: true,
+            avatar: true,
+          },
+        }
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+      take: 5, // Limit to 5 questions
+      skip, // Skip for pagination
+    });
+
+    return res.status(200).json({
+      message: "Questions fetched successfully",
+      data: questions,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to fetch the Question." });
+  }
+};
+
 export const addQuestion = async (
   req: Request,
   res: Response
 ): Promise<any> => {
   try {
+    const { userId } = req;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User ID is required." });
+    }
     const {
       createdById,
       questionText,
@@ -18,6 +70,7 @@ export const addQuestion = async (
       recipientList,
     } = req.body;
 
+    console.log("Request body:", req.body);
     // Generate a unique public link if question is public
     let publicLink: string | null = null;
 
@@ -40,7 +93,9 @@ export const addQuestion = async (
       }
 
       if (!isUnique) {
-        return res.status(500).json({ error: "Failed to generate unique public link." });
+        return res
+          .status(500)
+          .json({ error: "Failed to generate unique public link." });
       }
     }
 
@@ -55,11 +110,12 @@ export const addQuestion = async (
         isPublic,
         publicLink,
         recipients: {
-          create: recipientList?.map((userId: string) => ({
-            user: {
-              connect: { id: userId },
-            },
-          })) || [],
+          create:
+            recipientList?.map((userId: string) => ({
+              user: {
+                connect: { id: userId },
+              },
+            })) || [],
         },
       },
       include: {
@@ -71,7 +127,6 @@ export const addQuestion = async (
       message: "Question added successfully",
       data: question,
     });
-
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Failed to add the Question." });
