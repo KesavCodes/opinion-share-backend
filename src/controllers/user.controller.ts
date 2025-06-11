@@ -67,3 +67,54 @@ export const getUserProfile = async (
     return res.status(500).json({ error: "Failed to retrieve user profile." });
   }
 };
+
+export const searchUsers = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  const { userId } = req;
+  const { key } = req.query;
+  if (!userId)
+    return res.status(401).json({
+      message: "Not Authenticated.",
+    });
+  try {
+    const searchList = await prisma.user.findMany({
+      where: {
+        AND: [
+          {
+            OR: [
+              {
+                username: {
+                  startsWith: key ? String(key) : "",
+                  mode: "insensitive",
+                },
+              },
+              {
+                name: {
+                  startsWith: key ? String(key) : "",
+                  mode: "insensitive",
+                },
+              },
+            ],
+            id: {
+              not: userId,
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        username: true,
+        name: true,
+        avatar: true,
+      },
+    });
+    return res.json({
+      message: "User list for query retrieved successfully.",
+      data: searchList,
+    });
+  } catch (error) {
+    return res.status(500).json({ error: "Failed to retrieve user profile." });
+  }
+};
