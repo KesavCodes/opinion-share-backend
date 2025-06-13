@@ -30,7 +30,7 @@ export const getQuestions = async (
             username: true,
             avatar: true,
           },
-        }
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -46,6 +46,50 @@ export const getQuestions = async (
   } catch (err) {
     console.error(err);
     return res.status(500).json({ error: "Failed to fetch the Question." });
+  }
+};
+
+export const getQuestionsById = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId } = req;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID is required." });
+    }
+    const { questionId } = req.params;
+
+    const questionData = await prisma.question.findFirst({
+      where: {
+        AND: [
+          { id: questionId },
+          {
+            OR: [
+              { createdById: userId },
+              {
+                recipients: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    if (!questionData)
+      return res.status(400).json({
+        error: "User doesn't have any question with that question ID",
+      });
+    return res.status(200).json({
+      message: "Questions fetched successfully",
+      data: questionData,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to add the Question." });
   }
 };
 
