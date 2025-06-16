@@ -78,6 +78,15 @@ export const getQuestionsById = async (
           },
         ],
       },
+      include:{
+        createdBy: {
+          select: {
+            username: true,
+            name: true,
+            avatar: true,
+          }
+        }
+      }
     });
     if (!questionData)
       return res.status(400).json({
