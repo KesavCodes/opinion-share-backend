@@ -78,15 +78,15 @@ export const getQuestionsById = async (
           },
         ],
       },
-      include:{
+      include: {
         createdBy: {
           select: {
             username: true,
             name: true,
             avatar: true,
-          }
-        }
-      }
+          },
+        },
+      },
     });
     if (!questionData)
       return res.status(400).json({
@@ -98,7 +98,95 @@ export const getQuestionsById = async (
     });
   } catch (err) {
     console.error(err);
-    return res.status(500).json({ error: "Failed to add the Question." });
+    return res.status(500).json({ error: "Failed to fetch the Question." });
+  }
+};
+
+export const getQuestionAnswers = async (
+  req: Request,
+  res: Response
+): Promise<any> => {
+  try {
+    const { userId } = req;
+    if (!userId) {
+      return res.status(401).json({ error: "User ID is required." });
+    }
+    const { questionId } = req.params;
+    const { page } = req.query;
+    const questionData = await prisma.question.findFirst({
+      where: {
+        AND: [
+          { id: questionId },
+          {
+            OR: [
+              { createdById: userId },
+              {
+                recipients: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    if (!questionData)
+      return res.status(400).json({
+        error: "User doesn't have any question with that question ID",
+      });
+
+    const answerData = [];
+    if (Number(page) === 1) {
+      const userAnswer = await prisma.answer.findFirst({
+        where: {
+          questionId,
+          userId,
+        },
+        include: {
+          user: {
+            select: {
+              username: true,
+              name: true,
+              avatar: true,
+            },
+          },
+        },
+      });
+      answerData.push(userAnswer);
+    }
+
+    const otherParticipantAnswer = await prisma.answer.findMany({
+      where: {
+        questionId,
+        userId: {
+          not: userId,
+        },
+      },
+      orderBy: {
+        answeredAt: "desc",
+      },
+      include: {
+        user: {
+          select: {
+            username: true,
+            name: true,
+            avatar: true,
+          },
+        },
+      },
+      skip:  page ? (Number(page) - 1) * 5 : 0,
+      take: Number(page) === 1 ? 4 : 5,
+    });
+    answerData.push(otherParticipantAnswer);
+    return res.status(200).json({
+      message: "Answers fetched successfully",
+      data: answerData,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to fetch the Answers." });
   }
 };
 
@@ -123,7 +211,6 @@ export const addQuestion = async (
       recipientList,
     } = req.body;
 
-    console.log("Request body:", req.body);
     // Generate a unique public link if question is public
     let publicLink: string | null = null;
 
@@ -179,6 +266,59 @@ export const addQuestion = async (
     return res.status(201).json({
       message: "Question added successfully",
       data: question,
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: "Failed to add the Question." });
+  }
+};
+
+export const addAnswer = async (req: Request, res: Response): Promise<any> => {
+  try {
+    const { userId } = req;
+
+    if (!userId) {
+      return res.status(401).json({ error: "User ID is required." });
+    }
+    const { questionId } = req.params;
+    const { answer } = req.body;
+    const questionData = await prisma.question.findFirst({
+      where: {
+        AND: [
+          { id: questionId },
+          {
+            OR: [
+              { createdById: userId },
+              {
+                recipients: {
+                  some: {
+                    userId,
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    if (!questionData)
+      return res.status(400).json({
+        error: "User doesn't have any question with that question ID",
+      });
+    if (!answer)
+      return res.status(400).json({
+        error: "Answer cannot be empty.",
+      });
+    const postAnswer = await prisma.answer.create({
+      data: {
+        questionId,
+        userId,
+        answer,
+      },
+    });
+    return res.status(201).json({
+      message: "Question added successfully",
+      data: postAnswer,
     });
   } catch (err) {
     console.error(err);
